@@ -12,7 +12,7 @@ A braille-dot progress bar for statuslines and terminals.
        nix run nixpkgs#vhs -- demo/dotbar.tape
      The content is demo/tour.sh, which is also runnable on its own. -->
 
-```
+```text
 dotbar 76            ⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣀⣀⣀ 76%   (13 cells, 1% per dot)
 dotbar --dense 76    ⣿⡿⣀ 76%                (3 cells, 5% per dot)
 dotbar demo          animate 0 -> 100% over 5s
@@ -32,14 +32,10 @@ preferring a sibling of the `dotbar` binary over `$PATH`.
 
 ## Install
 
-```
+### Homebrew
+
+```text
 brew install tlehman/tap/dotbar
-```
-
-Or from source, which needs a Rust toolchain (`brew install rust`):
-
-```
-cargo install --git https://github.com/tlehman/dotbar
 ```
 
 The tap's formula is kept in this repo at
@@ -47,7 +43,28 @@ The tap's formula is kept in this repo at
 `tlehman/homebrew-tap`, and `brew install --HEAD tlehman/tap/dotbar` builds
 main.
 
-## Develop
+### Rust
+
+Or from source, which needs a Rust toolchain (`brew install rust`):
+
+```text
+cargo install --git https://github.com/tlehman/dotbar
+```
+
+### Nix
+
+Run it directly or add it as a flake input:
+
+```text
+nix run github:tlehman/dotbar -- 76
+```
+
+```nix
+inputs.dotbar.url = "github:tlehman/dotbar";
+# then: inputs.dotbar.packages.${system}.default
+```
+
+## Developing
 
 `devenv shell` (trust once with `devenv allow`), then `devenv test` for the
 full contract: toolchain present, `cargo clippy -D warnings`, `cargo test`.

@@ -1,0 +1,39 @@
+# Both jobs install Determinate Nix. The devenv job runs the same contract a
+# developer runs locally (`devenv test`: toolchain present, clippy -D
+# warnings, cargo test, wrapper renders); the flake job proves the
+# distribution path (package.nix / flake.nix) builds and the binary works.
+name: ci
+
+# pull_request only — no push trigger — so checks run exclusively on PR
+# branches, never on main or other non-PR pushes.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  # Lets determinate-nix-action authenticate via OIDC for higher rate limits;
+  # harmless when unauthenticated (e.g. PRs from forks).
+  id-token: write
+
+jobs:
+  devenv:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Install devenv
+        run: nix profile install nixpkgs#devenv
+      - name: Run the devenv contract
+        run: devenv test
+
+  flake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/determinate-nix-action@v3
+      - name: Evaluate flake outputs
+        run: nix flake check
+      - name: Build and smoke-test
+        run: |
+          nix build .#dotbar
+          [ "$(NO_COLOR=1 ./result/bin/dotbar --dense 100)" = "⣿⣿⡇ 100%" ]
