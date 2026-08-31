@@ -2,11 +2,14 @@
 //!
 //! ```text
 //! dotbar [--dense] [<percent>]     render a bar
+//! dotbar install-claude [--yes]   wire dotbar into ~/.claude/settings.json
 //! dotbar [--dense] <subcommand>    dispatch to `dotbar-<subcommand>`
 //! ```
 //!
 //! With no percent argument it reads Claude Code statusline JSON on stdin and
 //! renders `100 - .context_window.remaining_percentage`.
+
+mod install;
 
 use std::io::{Read as _, Write as _};
 use std::process::{Command, ExitCode};
@@ -171,6 +174,7 @@ fn main() -> ExitCode {
             Err(_) => match first.as_str() {
                 "demo" => demo(pct_per_dot, color, Duration::from_millis(50)),
                 "demo-slow" => demo(pct_per_dot, color, Duration::from_secs(1)),
+                "install-claude" => return install::run(dense, rest),
                 sub => {
                     // Forward the flag we consumed, so the helper sees it too.
                     let mut fwd: Vec<String> = Vec::new();

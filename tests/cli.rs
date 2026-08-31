@@ -145,3 +145,57 @@ fn dense_is_only_a_leading_flag() {
     assert!(trailing.trim_end().ends_with(" 76%"));
     assert_eq!(code, Some(0));
 }
+
+#[test]
+fn install_claude_asks_backs_up_and_merges() {
+    let dir = std::env::temp_dir().join(format!("dotbar-install-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let settings = dir.join("settings.json");
+    let s = settings.to_str().unwrap();
+
+    // Missing file, answer "n": nothing is created, exit 1.
+    let (_, err, code) = run(&["install-claude", "--settings", s], b"n\n");
+    assert_eq!(code, Some(1), "{err}");
+    assert!(!settings.exists());
+    assert!(err.contains("\"command\": \"dotbar\""), "{err}");
+
+    // Answer "y": file is created with only the statusLine.
+    let (_, err, code) = run(&["install-claude", "--settings", s], b"y\n");
+    assert_eq!(code, Some(0), "{err}");
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&settings).unwrap()).unwrap();
+    assert_eq!(v["statusLine"]["command"], "dotbar");
+
+    // Second run is a no-op that succeeds without prompting.
+    let (_, err, code) = run(&["install-claude", "--settings", s], b"");
+    assert_eq!(code, Some(0), "{err}");
+    assert!(err.contains("already"), "{err}");
+
+    // Existing foreign statusline plus other keys: prefixed, backed up, --yes skips the prompt.
+    std::fs::write(
+        &settings,
+        r#"{"model":"opus","statusLine":{"type":"command","command":"my.sh"}}"#,
+    )
+    .unwrap();
+    let (_, err, code) = run(
+        &["--dense", "install-claude", "--yes", "--settings", s],
+        b"",
+    );
+    assert_eq!(code, Some(0), "{err}");
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&settings).unwrap()).unwrap();
+    assert_eq!(
+        v["statusLine"]["command"],
+        "printf '%s ' \"$(dotbar --dense)\"; my.sh"
+    );
+    assert_eq!(v["model"], "opus");
+    assert!(dir.join("settings.json.bak").exists());
+
+    // Corrupt JSON is refused, not clobbered.
+    std::fs::write(&settings, "{oops").unwrap();
+    let (_, err, code) = run(&["install-claude", "--yes", "--settings", s], b"");
+    assert_eq!(code, Some(1), "{err}");
+    assert_eq!(std::fs::read_to_string(&settings).unwrap(), "{oops");
+
+    std::fs::remove_dir_all(&dir).ok();
+}

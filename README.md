@@ -64,6 +64,20 @@ inputs.dotbar.url = "github:tlehman/dotbar";
 # then: inputs.dotbar.packages.${system}.default
 ```
 
+### Claude Code statusline
+
+Wire dotbar into Claude Code's statusline:
+
+```text
+dotbar install-claude
+```
+
+It shows the exact `statusLine` entry it will add to `~/.claude/settings.json`
+(or `$CLAUDE_CONFIG_DIR/settings.json`) and asks before writing. An existing
+statusline command is kept, with the bar prefixed on the same line. Pass
+`--dense` for the 3-cell bar and `--yes` to skip the prompt; the old file is
+saved as `settings.json.bak`.
+
 ## Developing
 
 `devenv shell` (trust once with `devenv allow`), then `devenv test` for the
