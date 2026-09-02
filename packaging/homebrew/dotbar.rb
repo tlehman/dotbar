@@ -7,8 +7,8 @@
 class Dotbar < Formula
   desc "Braille-dot progress bar for statuslines and terminals"
   homepage "https://github.com/tlehman/dotbar"
-  url "https://github.com/tlehman/dotbar/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "6cd0a1356d6c7c23f6f3577f7d1233d67d18d1a4293ddefc9b58e3a263434b8f"
+  url "https://github.com/tlehman/dotbar/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "9bbeb1b852cb39960bcc5e84770bc0cb634de3cb2530f05cdef88b13c4b63ce0"
   license any_of: ["MIT", "Apache-2.0"]
   head "https://github.com/tlehman/dotbar.git", branch: "main"
 
