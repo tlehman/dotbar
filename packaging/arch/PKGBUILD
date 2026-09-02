@@ -1,0 +1,65 @@
+# Maintainer: Tobi Lehman <mail@tobilehman.com>
+#
+# Arch package, which is also the Omarchy package — Omarchy is Arch (ID_LIKE=arch)
+# and installs from the same pacman. Build and install it straight from here with
+# `makepkg -si`; publish it to the AUR by copying this file to the root of the
+# `dotbar` AUR repo (ssh://aur@aur.archlinux.org/dotbar.git) together with the
+# generated metadata, which AUR requires and which is not kept in this repo
+# because it would go stale:
+#   makepkg --printsrcinfo > .SRCINFO
+#
+# On each release: bump pkgver, reset pkgrel to 1, and recompute the checksum
+# with `updpkgsums` (pacman-contrib). The same bump lands on
+# packaging/homebrew/dotbar.rb, so the two stay on the same tag.
+
+pkgname=dotbar
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Braille-dot progress bar for statuslines and terminals"
+arch=('x86_64' 'aarch64')
+url="https://github.com/tlehman/dotbar"
+# SPDX expression rather than two array entries: the crate is MIT OR Apache-2.0,
+# the consumer's choice, not both at once.
+license=('MIT OR Apache-2.0')
+depends=('gcc-libs' 'glibc')
+makedepends=('cargo')
+# One small binary that renders a statusline segment; nobody is attaching a
+# debugger to it, and the split debug package is pure repo weight.
+options=('!debug')
+
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('9bbeb1b852cb39960bcc5e84770bc0cb634de3cb2530f05cdef88b13c4b63ce0')
+
+prepare() {
+  cd "$pkgname-$pkgver"
+
+  # Fetch while the network is still allowed, so build() and check() can run
+  # --frozen. --locked holds the build to the committed Cargo.lock.
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+
+  export CARGO_TARGET_DIR=target
+  cargo build --frozen --release
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+
+  # tests/cli.rs is process-level — real stdin, real exit codes — so --release
+  # runs it against the same binary package() installs.
+  export CARGO_TARGET_DIR=target
+  cargo test --frozen --release
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  install -Dm755 "target/release/dotbar" "$pkgdir/usr/bin/dotbar"
+  # Dual-licensed, so both texts ship: neither one alone is the license.
+  install -Dm644 LICENSE-MIT "$pkgdir/usr/share/licenses/$pkgname/LICENSE-MIT"
+  install -Dm644 LICENSE-APACHE "$pkgdir/usr/share/licenses/$pkgname/LICENSE-APACHE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
