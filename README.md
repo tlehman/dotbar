@@ -43,6 +43,19 @@ The tap's formula is kept in this repo at
 `tlehman/homebrew-tap`, and `brew install --HEAD tlehman/tap/dotbar` builds
 main.
 
+### Arch Linux / Omarchy
+
+```text
+makepkg -si -D packaging/arch
+```
+
+Omarchy is Arch, so one package covers both. The PKGBUILD is kept in this repo
+at [packaging/arch/PKGBUILD](packaging/arch/PKGBUILD); it builds the tagged
+release with the system Rust toolchain (`cargo`, pulled in as a makedepend) and
+runs the test suite as its `check()`. Publishing it to the AUR means copying
+that file to the `dotbar` AUR repo along with `makepkg --printsrcinfo >
+.SRCINFO`.
+
 ### Rust
 
 Or from source, which needs a Rust toolchain (`brew install rust`):

@@ -7,8 +7,8 @@
 class Dotbar < Formula
   desc "Braille-dot progress bar for statuslines and terminals"
   homepage "https://github.com/tlehman/dotbar"
-  url "https://github.com/tlehman/dotbar/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "6cd0a1356d6c7c23f6f3577f7d1233d67d18d1a4293ddefc9b58e3a263434b8f"
+  url "https://github.com/tlehman/dotbar/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "9bbeb1b852cb39960bcc5e84770bc0cb634de3cb2530f05cdef88b13c4b63ce0"
   license any_of: ["MIT", "Apache-2.0"]
   head "https://github.com/tlehman/dotbar.git", branch: "main"
 
@@ -19,9 +19,18 @@ class Dotbar < Formula
   end
 
   test do
-    # 76% renders 13 cells; NO_COLOR keeps the comparison to literal text.
-    assert_match "76%", shell_output("NO_COLOR=1 #{bin}/dotbar 76")
-    # No such field means no output and exit 0, not an error.
-    assert_equal "", shell_output("echo '{}' | #{bin}/dotbar")
+    # NO_COLOR keeps the SGR sequences out of the comparison; the bar itself is
+    # 13 cells at 1% per dot, so 50% is six full cells plus a two-dot cell.
+    assert_equal "⣿⣿⣿⣿⣿⣿⡄⣀⣀⣀⣀⣀⣀ 50%",
+                 shell_output("NO_COLOR=1 #{bin}/dotbar 50").chomp
+    assert_equal "⣿⡿⣀ 76%",
+                 shell_output("NO_COLOR=1 #{bin}/dotbar --dense 76").chomp
+    # Statusline mode: renders 100 - remaining_percentage from stdin.
+    assert_match(/ 76%$/,
+                 pipe_output("NO_COLOR=1 #{bin}/dotbar",
+                             '{"context_window":{"remaining_percentage":24.3}}'))
+    # An unknown subcommand is dispatched, not silently ignored.
+    assert_match "is not a dotbar command",
+                 shell_output("#{bin}/dotbar no-such-helper 2>&1", 1)
   end
 end
